@@ -1,3 +1,4 @@
+import click
 from flask import Flask, abort, render_template, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap5
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
@@ -37,21 +38,40 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+EMPLOYEE_PASSWORD_HASH = os.environ.get("EMPLOYEE_PASSWORD_HASH", "")
+
+
+@app.cli.command("hash-password")
+@click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
+def hash_password(password):
+    """Print a hash to store in EMPLOYEE_PASSWORD_HASH."""
+    click.echo(generate_password_hash(password))
+
+
+class Employee(UserMixin):
+    id = "employee"
+
+
+employee = Employee()
+
+
 @login_manager.user_loader
 def load_user(user_id):
-    return db.get_or_404(User, user_id)
+    return employee if user_id == employee.id else None
 
 
 class Base(DeclarativeBase):
     pass
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI")
+
+db_uri = os.environ.get("DB_URI", "sqlite:///project.db")
+if db_uri.startswith("postgres://"):
+    # Render (and some other providers) hand out "postgres://" URIs, but
+    # SQLAlchemy 2.x only accepts the "postgresql://" scheme.
+    db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
-
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    password: Mapped[str] = mapped_column(db.String)
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -108,9 +128,8 @@ def login():
         return redirect(url_for('orders'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = db.session.execute(db.select(User)).scalars().first()
-        if user and check_password_hash(user.password, form.password.data):
-            login_user(user)
+        if EMPLOYEE_PASSWORD_HASH and check_password_hash(EMPLOYEE_PASSWORD_HASH, form.password.data):
+            login_user(employee)
             return redirect(url_for('orders'))
         flash("Incorrect password")
         return redirect(url_for('login'))
@@ -166,4 +185,4 @@ def order():
     )
 
 if __name__ == '__main__':
-    app.run(port=5002, debug=True)
+    app.run(port=5002)
