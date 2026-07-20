@@ -1,0 +1,69 @@
+{% from 'bootstrap5/form.html' import render_form %}
+{% include "header.html" %}
+
+          <!-- Main -->
+             <div id="main" class="wrapper style1">
+                <div class="container">
+                   <header class="major">
+                      <h2>Place an Order</h2>
+                      <p>Tell us where you are on the course and we'll bring it to you</p>
+                   </header>
+
+                   <!-- Content -->
+                      <section id="content">
+                         <p>Running low mid-round? No need to head back to the clubhouse. Just let
+                         us know your name, what hole you're on, and how many golf balls, tees, and
+                         snacks you need, and we'll get them out to you on the course. It's the same
+                         simple idea we started with in our back yard — just made a little easier to
+                         reach.</p>
+
+                         {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                               {% for message in messages %}
+                                  <p>{{ message }}</p>
+                               {% endfor %}
+                            {% endif %}
+                         {% endwith %}
+
+                         {{ render_form(form) }}
+
+                         <p id="order-total">Total: <strong>$0</strong></p>
+
+                         <script>
+                            (function () {
+                               var prices = {
+                                  ball_qty: {{ price_per_ball }},
+                                  tee_qty: {{ price_per_tee }},
+                                  snack_qty: {{ price_per_snack }}
+                               };
+                               var fields = Object.keys(prices).map(function (id) {
+                                  return document.getElementById(id);
+                               });
+                               var total = document.querySelector('#order-total strong');
+
+                               function updateTotal() {
+                                  var sum = 0;
+                                  fields.forEach(function (field) {
+                                     if (field) {
+                                        sum += (parseInt(field.value, 10) || 0) * prices[field.id];
+                                     }
+                                  });
+                                  total.textContent = '$' + sum;
+                               }
+
+                               fields.forEach(function (field) {
+                                  if (field) {
+                                     field.addEventListener('input', updateTotal);
+                                  }
+                               });
+
+                               updateTotal();
+                            })();
+                         </script>
+
+                      </section>
+
+                </div>
+             </div>
+
+{% include "footer.html" %}

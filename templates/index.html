@@ -1,0 +1,75 @@
+{% include "header.html" %}
+
+			<!-- Banner -->
+				<section id="banner">
+					<div class="content">
+						<header>
+							<h2>Welcome to TITLE</h2>
+							<p>SUBTITLE.</p>
+						</header>
+						<span class="image"><img src="../static/assets/images/pic01.jpg" alt="" /></span>
+					</div>
+					<a href="#one" class="goto-next scrolly">Next</a>
+				</section>
+
+			<!-- One -->
+				<section id="one" class="spotlight style1 bottom">
+					<span class="image fit main"><img src="../static/assets/images/pic02.jpg" alt="" /></span>
+					<div class="content">
+						<div class="container">
+						   <div class="row">
+							  <div class="col-4 col-12-medium">
+								 <header>
+									<h2>Fresh Golf Balls, Delivered to Your Hole</h2>
+									<p>Order what you need, right when you need it — no clubhouse trip required</p>
+								 </header>
+							  </div>
+							  <div class="col-4 col-12-medium">
+								 <p>Lost a ball in the rough on 7? Ran out on the back nine? Just tell us
+								 your name, your hole number, and how many you need. We'll get fresh
+								 balls out to you on the course so you can keep your round moving
+								 without a detour back to the pro shop.</p>
+							  </div>
+							  <div class="col-4 col-12-medium">
+								 <p>We stock a range of golf balls for every kind of player, from
+								 everyday rounds to your best game yet. Place an order in seconds
+								 from your phone, and our team gets it instantly so delivery to
+								 your hole is fast and hassle-free.</p>
+							  </div>
+						   </div>
+						</div>
+					</div>
+					<a href="#two" class="goto-next scrolly">Next</a>
+				</section>
+
+			<!-- Two -->
+				<section id="two" class="spotlight style2 right">
+					<span class="image fit main"><img src="../static/assets/images/pic03.jpg" alt="" /></span>
+					<div class="content">
+					   <header>
+						  <h2>From a Backyard Stand to a Full Website</h2>
+						  <p>Our story is a simple one — it started right in our own backyard</p>
+					   </header>
+					   <p>We started as a small stand behind our house, selling golf balls to
+					   neighbors and passersby. We liked it enough to keep going, and decided
+					   to expand — so we brought that same stand online, and now anyone can
+					   order golf balls delivered straight to their hole.</p>
+					   <ul class="actions">
+						  <li><a href="/about" class="button">Learn More</a></li>
+					   </ul>
+					</div>
+					<a href="#three" class="goto-next scrolly">Next</a>
+				</section>
+
+			<!-- Three -->
+				<section id="five" class="wrapper style2 special">
+					<div class="container">
+						<header>
+							<h2>Click Here to Order</h2>
+							<p>Just fill out the form, and we'll be there in a jiffy</p>
+						</header>
+						<a href="{{url_for('order')}}"><input type="submit" value="Order Here!" class="primary" /></a>
+					</div>
+				</section>
+
+{% include "footer.html" %}

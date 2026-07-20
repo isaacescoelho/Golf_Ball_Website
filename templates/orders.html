@@ -1,0 +1,48 @@
+{% include "header.html" %}
+
+          <!-- Main -->
+             <div id="main" class="wrapper style1">
+                <div class="container">
+                   <header class="major">
+                      <h2>Orders</h2>
+                      <p>Current golf ball orders waiting to go out</p>
+                   </header>
+
+                   <!-- Content -->
+                      <section id="content">
+
+                         <table>
+                            <tr>
+                               <th>#</th>
+                               <th>Name</th>
+                               <th>Hole</th>
+                               <th>Balls</th>
+                               <th>Tees</th>
+                               <th>Snacks</th>
+                               <th>Cost</th>
+                               <th>Placed At</th>
+                            </tr>
+                            {% for order in current_orders %}
+                            <tr>
+                               <td>{{ order.id }}</td>
+                               <td>{{ order.name }}</td>
+                               <td>{{ order.hole_number }}</td>
+                               <td>{{ order.ball_qty }}</td>
+                               <td>{{ order.tee_qty }}</td>
+                               <td>{{ order.snack_qty }}</td>
+                               <td>${{ order.cost }}</td>
+                               <td>{{ (order.timestamp | central_time).strftime('%I:%M %p') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                               <td colspan="8">No orders yet.</td>
+                            </tr>
+                            {% endfor %}
+                         </table>
+
+                      </section>
+
+                </div>
+             </div>
+
+{% include "footer.html" %}

@@ -1,0 +1,21 @@
+{% include "header.html" %}
+
+          <!-- Main -->
+             <div id="main" class="wrapper style1">
+                <div class="container">
+                   <header class="major">
+                      <h2>{{ code }}</h2>
+                      <p>{{ message }}</p>
+                   </header>
+
+                   <!-- Content -->
+                      <section id="content">
+                         <ul class="actions">
+                            <li><a href="{{ url_for('index') }}" class="button">Back to Home</a></li>
+                         </ul>
+                      </section>
+
+                </div>
+             </div>
+
+{% include "footer.html" %}

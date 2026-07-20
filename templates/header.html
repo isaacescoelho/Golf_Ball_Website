@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>TITLE</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		{{ bootstrap.load_css() }}
+		<link rel="stylesheet" href="../static/assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="../static/assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload landing">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<header id="header">
+					<h1 id="logo"><a href="{{ url_for('index') }}">TITLE</a></h1>
+					<nav id="nav">
+						<ul>
+							<li><a href="{{ url_for('index') }}">Home</a></li>
+							<li>
+								<a href="{{ url_for('order') }}">Order</a>
+							</li>
+							<li><a href="{{ url_for('about') }}">About</a></li>
+							{% if current_user.is_authenticated %}
+							<li><a href="{{ url_for('orders') }}" class="button primary">Admin</a></li>
+							<li><a href="{{ url_for('logout') }}">Log Out</a></li>
+							{% else %}
+							<li><a href="{{ url_for('login') }}" class="button primary">Log in as Employee</a></li>
+							{% endif %}
+						</ul>
+					</nav>
+				</header>

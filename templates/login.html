@@ -1,0 +1,44 @@
+{% from 'bootstrap5/form.html' import render_form %}
+{% include "header.html" %}
+
+          <!-- Main -->
+             <div id="main" class="wrapper style1">
+                <div class="container">
+                   <header class="major">
+                      <h2>Employee Login</h2>
+                      <p>Sign in to view and manage orders</p>
+                   </header>
+
+                   <!-- Content -->
+                      <section id="content">
+
+                         {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                               {% for message in messages %}
+                                  <p>{{ message }}</p>
+                               {% endfor %}
+                            {% endif %}
+                         {% endwith %}
+
+                         {{ render_form(form) }}
+
+                         <style>
+                            #submit {
+                               background-color: transparent;
+                               border: 1px solid #ffffff;
+                               color: #ffffff;
+                            }
+                            #submit:hover,
+                            #submit:active {
+                               background-color: #ffffff;
+                               border-color: #ffffff;
+                               color: #000000;
+                            }
+                         </style>
+
+                      </section>
+
+                </div>
+             </div>
+
+{% include "footer.html" %}
