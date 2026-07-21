@@ -5,7 +5,7 @@ from flask_login import UserMixin, login_user, LoginManager, current_user, logou
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFError
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Integer, String, Text, inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
-from forms import LoginForm, OrderForm
+from forms import LoginForm, OrderForm, CSRFOnlyForm
 
 load_dotenv()
 
@@ -73,6 +73,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
+ORDER_STATUSES = ("pending", "in_progress", "completed")
+
+
 class Order(db.Model):
     __tablename__ = 'orders'
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
@@ -82,10 +85,38 @@ class Order(db.Model):
     tee_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     snack_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     cost: Mapped[int] = mapped_column(db.Integer)
+    status: Mapped[str] = mapped_column(db.String, default="pending")
     timestamp: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow)
+
+
+class ShopStatus(db.Model):
+    __tablename__ = 'shop_status'
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
+    is_open: Mapped[bool] = mapped_column(db.Boolean, default=True)
+
+
+def run_migrations():
+    """Add columns that were introduced after the tables already existed in a deployed db."""
+    inspector = inspect(db.engine)
+    if 'orders' in inspector.get_table_names():
+        columns = {col['name'] for col in inspector.get_columns('orders')}
+        if 'status' not in columns:
+            with db.engine.begin() as conn:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN status VARCHAR DEFAULT 'pending'"))
+
 
 with app.app_context():
     db.create_all()
+    run_migrations()
+
+
+def get_shop_status():
+    status = db.session.get(ShopStatus, 1)
+    if status is None:
+        status = ShopStatus(id=1, is_open=True)
+        db.session.add(status)
+        db.session.commit()
+    return status
 
 
 def purge_expired_orders():
@@ -148,11 +179,55 @@ def logout():
 def orders():
     purge_expired_orders()
     current_orders = db.session.execute(db.select(Order).order_by(Order.timestamp)).scalars().all()
-    return render_template('orders.html', current_orders=current_orders)
+    return render_template(
+        'orders.html',
+        current_orders=current_orders,
+        shop_status=get_shop_status(),
+        form=CSRFOnlyForm(),
+    )
+
+
+# Employees mark an order in-progress or completed
+@app.route('/orders/<int:order_id>/status', methods=['POST'])
+@login_required
+def update_order_status(order_id):
+    form = CSRFOnlyForm()
+    if form.validate_on_submit():
+        new_status = request.form.get('status')
+        if new_status in ORDER_STATUSES:
+            order_to_update = db.session.get(Order, order_id)
+            if order_to_update is not None:
+                order_to_update.status = new_status
+                try:
+                    db.session.commit()
+                except SQLAlchemyError:
+                    db.session.rollback()
+                    flash("Couldn't update that order. Please try again.")
+    return redirect(url_for('orders'))
+
+
+# Employees flip whether we're currently taking orders
+@app.route('/shop-status', methods=['POST'])
+@login_required
+def toggle_shop_status():
+    form = CSRFOnlyForm()
+    if form.validate_on_submit():
+        status = get_shop_status()
+        status.is_open = not status.is_open
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            flash("Couldn't update shop status. Please try again.")
+    return redirect(url_for('orders'))
 
 # For ordering golf balls
 @app.route('/order', methods=['GET', 'POST'])
 def order():
+    shop_status = get_shop_status()
+    if not shop_status.is_open:
+        return render_template('order.html', closed=True)
+
     form = OrderForm()
     if form.validate_on_submit():
         ball_qty = form.ball_qty.data or 0
@@ -179,6 +254,7 @@ def order():
     return render_template(
         'order.html',
         form=form,
+        closed=False,
         price_per_ball=BALL_PRICE,
         price_per_tee=TEE_PRICE,
         price_per_snack=SNACK_PRICE,

@@ -11,6 +11,18 @@
                    <!-- Content -->
                       <section id="content">
 
+                         <p>
+                            We're currently
+                            <strong>{{ "OPEN" if shop_status.is_open else "CLOSED" }}</strong>
+                            for orders.
+                            <form method="post" action="{{ url_for('toggle_shop_status') }}" style="display:inline">
+                               {{ form.hidden_tag() }}
+                               <button type="submit" class="button small {{ 'alt' if shop_status.is_open else 'primary' }}">
+                                  {{ "Mark as Closed" if shop_status.is_open else "Mark as Open" }}
+                               </button>
+                            </form>
+                         </p>
+
                          <table>
                             <tr>
                                <th>#</th>
@@ -21,6 +33,8 @@
                                <th>Snacks</th>
                                <th>Cost</th>
                                <th>Placed At</th>
+                               <th>Status</th>
+                               <th>Update</th>
                             </tr>
                             {% for order in current_orders %}
                             <tr>
@@ -32,10 +46,23 @@
                                <td>{{ order.snack_qty }}</td>
                                <td>${{ order.cost }}</td>
                                <td>{{ (order.timestamp | central_time).strftime('%I:%M %p') }}</td>
+                               <td>{{ order.status | replace("_", " ") | title }}</td>
+                               <td>
+                                  <form method="post" action="{{ url_for('update_order_status', order_id=order.id) }}" style="display:inline">
+                                     {{ form.hidden_tag() }}
+                                     <input type="hidden" name="status" value="in_progress">
+                                     <button type="submit" class="button small" {{ "disabled" if order.status == "in_progress" else "" }}>In Progress</button>
+                                  </form>
+                                  <form method="post" action="{{ url_for('update_order_status', order_id=order.id) }}" style="display:inline">
+                                     {{ form.hidden_tag() }}
+                                     <input type="hidden" name="status" value="completed">
+                                     <button type="submit" class="button small primary" {{ "disabled" if order.status == "completed" else "" }}>Completed</button>
+                                  </form>
+                               </td>
                             </tr>
                             {% else %}
                             <tr>
-                               <td colspan="8">No orders yet.</td>
+                               <td colspan="10">No orders yet.</td>
                             </tr>
                             {% endfor %}
                          </table>

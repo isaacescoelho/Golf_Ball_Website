@@ -11,6 +11,9 @@
 
                    <!-- Content -->
                       <section id="content">
+                      {% if closed %}
+                         <p>We're not taking orders right now — check back later!</p>
+                      {% else %}
                          <p>Running low mid-round? No need to head back to the clubhouse. Just let
                          us know your name, what hole you're on, and how many golf balls, tees, and
                          snacks you need, and we'll get them out to you on the course. It's the same
@@ -60,7 +63,7 @@
                                updateTotal();
                             })();
                          </script>
-
+                      {% endif %}
                       </section>
 
                 </div>

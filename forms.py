@@ -8,6 +8,11 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Log In")
 
 
+class CSRFOnlyForm(FlaskForm):
+    """No visible fields; used purely to CSRF-protect simple action buttons."""
+    pass
+
+
 class OrderForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     hole_number = IntegerField("Hole Number", validators=[DataRequired(), NumberRange(min=1, max=18)])
