@@ -8,6 +8,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Log In")
 
 
+# For post routes that don't actually have any real user info to validate ie just flipping a bool
 class CSRFOnlyForm(FlaskForm):
     pass
 

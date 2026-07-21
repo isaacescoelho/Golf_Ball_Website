@@ -15,6 +15,13 @@ import os
 from dotenv import load_dotenv
 from forms import LoginForm, OrderForm, CSRFOnlyForm
 
+# SUPER EXPLANATORY COMMENTS ARE MOSTLY FOR ME SINCE I JUST LEARNT A LOT OF THIS STUFF
+
+# The CSRFOnlyForm does it so that you create your form, pass it in,
+# create the hidden_tag which puts the CSRF token on the hidden part of the form
+# then when you click something it submits the form with the CSRF token
+# and if it is validated it will do the action associated with the form
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -29,6 +36,7 @@ ORDER_TIME = timedelta(minutes=20)
 MY_TZ = ZoneInfo("America/Chicago")
 
 
+# replaces all the utc timezone info with my timezone
 @app.template_filter('central_time')
 def central_time_filter(dt):
     if dt is None:
@@ -42,10 +50,14 @@ login_manager.login_view = 'login'
 EMPLOYEE_PASSWORD_HASH = os.environ.get("EMPLOYEE_PASSWORD_HASH", "")
 
 
+# Adds a new terminal command: "flask hash-password". It asks you to type a password
+# (hiding the letters as you type, and asking you to type it twice to check for typos),
+# then runs it through generate_password_hash - the same function used everywhere else
+# in this file - and prints the resulting hash so you can copy it into EMPLOYEE_PASSWORD_HASH.
+# This isn't a new way of hashing, just an easy way to run the normal one from the terminal.
 @app.cli.command("hash-password")
 @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
 def hash_password(password):
-    """Print a hash to store in EMPLOYEE_PASSWORD_HASH."""
     click.echo(generate_password_hash(password))
 
 
@@ -56,6 +68,7 @@ class Employee(UserMixin):
 employee = Employee()
 
 
+# user_loader function that well... loads users, but it looks slightly different since we only have one user
 @login_manager.user_loader
 def load_user(user_id):
     return employee if user_id == employee.id else None
@@ -65,9 +78,8 @@ class Base(DeclarativeBase):
     pass
 
 db_uri = os.environ.get("DB_URI", "sqlite:///project.db")
+# Replaces the db_uri with a postgresql one when we are having to use postgresql
 if db_uri.startswith("postgres://"):
-    # Render (and some other providers) hand out "postgres://" URIs, but
-    # SQLAlchemy 2.x only accepts the "postgresql://" scheme.
     db_uri = db_uri.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -76,6 +88,7 @@ db.init_app(app)
 
 ORDER_STATUSES = ("pending", "in_progress", "completed")
 
+# DB Tables
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -97,6 +110,7 @@ class ShopStatus(db.Model):
     is_open: Mapped[bool] = mapped_column(db.Boolean, default=True)
 
 
+# Fixes the data for when we have 2 different dbs because we have one for production too
 def fix_data():
     inspector = inspect(db.engine)
     if 'orders' in inspector.get_table_names():
@@ -119,6 +133,7 @@ with app.app_context():
     fix_data()
 
 
+# Finds whether shop is open or closed
 def open_or_closed():
     status = db.session.get(ShopStatus, 1)
     if status is None:
@@ -128,7 +143,8 @@ def open_or_closed():
     return status
 
 
-def delelte_old_orders():
+# when orders exceed 20 minutes, they are deleted
+def delete_old_orders():
     cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - ORDER_TIME
     try:
         db.session.execute(db.delete(Order).where(Order.timestamp < cutoff))
@@ -136,6 +152,8 @@ def delelte_old_orders():
     except SQLAlchemyError:
         db.session.rollback()
 
+
+# Error handling which routes to error.html
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -153,6 +171,8 @@ def csrf_error(e):
     flash("Your form session expired. Please try again.")
     return redirect(request.referrer or url_for('index'))
 
+# PAGES
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -164,14 +184,18 @@ def about():
 # For logging in as employee
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Has the same button, but the text changes, so you're going to the same route
+    # even if you are authenticated and are rerouted to the admin page
     if current_user.is_authenticated:
         return redirect(url_for('orders'))
     form = LoginForm()
     if form.validate_on_submit():
+        # Form checking to log in user using hashes for security
         if EMPLOYEE_PASSWORD_HASH and check_password_hash(EMPLOYEE_PASSWORD_HASH, form.password.data):
             login_user(employee)
             return redirect(url_for('orders'))
         flash("Incorrect password")
+        # Restart login
         return redirect(url_for('login'))
     return render_template('login.html', form=form)
 
@@ -186,7 +210,8 @@ def logout():
 @app.route('/orders', methods=['GET', 'POST'])
 @login_required
 def orders():
-    delelte_old_orders()
+    delete_old_orders()
+    # Finds all the orders
     current_orders = db.session.execute(db.select(Order).order_by(Order.timestamp)).scalars().all()
     return render_template(
         'orders.html',
@@ -196,7 +221,7 @@ def orders():
     )
 
 
-# Employees mark an order in-progress or completed
+# When employees mark whether an order is completed or in progress, it is processed here and updates the page.
 @app.route('/orders/<int:order_id>/status', methods=['POST'])
 @login_required
 def update_order_status(order_id):
@@ -207,6 +232,7 @@ def update_order_status(order_id):
             order_to_update = db.session.get(Order, order_id)
             if order_to_update is not None:
                 try:
+                    # updates order status
                     if new_status == "completed":
                         db.session.delete(order_to_update)
                     else:
@@ -218,13 +244,14 @@ def update_order_status(order_id):
     return redirect(url_for('orders'))
 
 
-# Employees flip whether we're currently taking orders
+# Can change whether we're taking orders.
 @app.route('/shop-status', methods=['POST'])
 @login_required
 def toggle_shop_status():
     form = CSRFOnlyForm()
     if form.validate_on_submit():
         status = open_or_closed()
+        # only 2 options so if you click the button it is now the opposite of what it was before you clicked it
         status.is_open = not status.is_open
         try:
             db.session.commit()
@@ -246,6 +273,7 @@ def order():
         tee_qty = form.tee_qty.data or 0
         snack_small_qty = form.snack_small_qty.data or 0
         snack_large_qty = form.snack_large_qty.data or 0
+        # calculates cost to put in Order table
         cost = (
             ball_qty * BALL_PRICE
             + tee_qty * TEE_PRICE
