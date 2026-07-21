@@ -56,7 +56,7 @@
                                   <form method="post" action="{{ url_for('update_order_status', order_id=order.id) }}" style="display:inline">
                                      {{ form.hidden_tag() }}
                                      <input type="hidden" name="status" value="completed">
-                                     <button type="submit" class="button small primary" {{ "disabled" if order.status == "completed" else "" }}>Completed</button>
+                                     <button type="submit" class="button small primary">Completed</button>
                                   </form>
                                </td>
                             </tr>

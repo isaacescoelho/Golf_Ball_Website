@@ -197,8 +197,11 @@ def update_order_status(order_id):
         if new_status in ORDER_STATUSES:
             order_to_update = db.session.get(Order, order_id)
             if order_to_update is not None:
-                order_to_update.status = new_status
                 try:
+                    if new_status == "completed":
+                        db.session.delete(order_to_update)
+                    else:
+                        order_to_update.status = new_status
                     db.session.commit()
                 except SQLAlchemyError:
                     db.session.rollback()
