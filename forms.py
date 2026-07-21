@@ -16,9 +16,9 @@ class CSRFOnlyForm(FlaskForm):
 class OrderForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     hole_number = IntegerField("Hole Number", validators=[DataRequired(), NumberRange(min=1, max=18)])
-    ball_qty = IntegerField("Golf Balls", validators=[Optional(), NumberRange(min=0)], default=0)
-    tee_qty = IntegerField("Tees", validators=[Optional(), NumberRange(min=0)], default=0)
-    snack_qty = IntegerField("Snacks", validators=[Optional(), NumberRange(min=0)], default=0)
+    ball_qty = IntegerField("Golf Balls", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
+    tee_qty = IntegerField("Tees", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
+    snack_qty = IntegerField("Snacks", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
     submit = SubmitField("Place Order")
 
     def validate(self, extra_validators=None):

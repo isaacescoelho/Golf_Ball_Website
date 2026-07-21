@@ -23,6 +23,7 @@
                             </form>
                          </p>
 
+                         <div class="table-wrapper">
                          <table>
                             <tr>
                                <th>#</th>
@@ -66,6 +67,12 @@
                             </tr>
                             {% endfor %}
                          </table>
+                         </div>
+
+                         <script>
+                            // Keep the board current without staff needing to remember to refresh.
+                            setTimeout(function () { window.location.reload(); }, 20000);
+                         </script>
 
                       </section>
 

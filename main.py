@@ -86,7 +86,7 @@ class Order(db.Model):
     snack_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     cost: Mapped[int] = mapped_column(db.Integer)
     status: Mapped[str] = mapped_column(db.String, default="pending")
-    timestamp: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow)
+    timestamp: Mapped[datetime] = mapped_column(db.DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
 class ShopStatus(db.Model):
@@ -120,7 +120,7 @@ def get_shop_status():
 
 
 def purge_expired_orders():
-    cutoff = datetime.utcnow() - ORDER_TIME
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - ORDER_TIME
     try:
         db.session.execute(db.delete(Order).where(Order.timestamp < cutoff))
         db.session.commit()
