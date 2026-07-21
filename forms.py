@@ -9,7 +9,6 @@ class LoginForm(FlaskForm):
 
 
 class CSRFOnlyForm(FlaskForm):
-    """No visible fields; used purely to CSRF-protect simple action buttons."""
     pass
 
 

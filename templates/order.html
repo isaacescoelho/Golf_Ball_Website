@@ -37,41 +37,6 @@
                          </ul>
 
                          {{ render_form(form) }}
-
-                         <p id="order-total">Total: <strong>$0</strong></p>
-
-                         <script>
-                            (function () {
-                               var prices = {
-                                  ball_qty: {{ price_per_ball }},
-                                  tee_qty: {{ price_per_tee }},
-                                  snack_small_qty: {{ price_per_snack_small }},
-                                  snack_large_qty: {{ price_per_snack_large }}
-                               };
-                               var fields = Object.keys(prices).map(function (id) {
-                                  return document.getElementById(id);
-                               });
-                               var total = document.querySelector('#order-total strong');
-
-                               function updateTotal() {
-                                  var sum = 0;
-                                  fields.forEach(function (field) {
-                                     if (field) {
-                                        sum += (parseInt(field.value, 10) || 0) * prices[field.id];
-                                     }
-                                  });
-                                  total.textContent = '$' + sum;
-                               }
-
-                               fields.forEach(function (field) {
-                                  if (field) {
-                                     field.addEventListener('input', updateTotal);
-                                  }
-                               });
-
-                               updateTotal();
-                            })();
-                         </script>
                       {% endif %}
                       </section>
 
