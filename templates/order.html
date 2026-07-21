@@ -28,6 +28,14 @@
                             {% endif %}
                          {% endwith %}
 
+                         <h3>Prices</h3>
+                         <ul id="price-list">
+                            <li>Golf Ball — ${{ price_per_ball }} each</li>
+                            <li>Tee — ${{ price_per_tee }} each</li>
+                            <li>Small Snack — ${{ price_per_snack_small }} each</li>
+                            <li>Large Snack — ${{ price_per_snack_large }} each</li>
+                         </ul>
+
                          {{ render_form(form) }}
 
                          <p id="order-total">Total: <strong>$0</strong></p>
@@ -37,7 +45,8 @@
                                var prices = {
                                   ball_qty: {{ price_per_ball }},
                                   tee_qty: {{ price_per_tee }},
-                                  snack_qty: {{ price_per_snack }}
+                                  snack_small_qty: {{ price_per_snack_small }},
+                                  snack_large_qty: {{ price_per_snack_large }}
                                };
                                var fields = Object.keys(prices).map(function (id) {
                                   return document.getElementById(id);

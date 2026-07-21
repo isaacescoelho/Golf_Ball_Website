@@ -23,7 +23,8 @@ Bootstrap5(app)
 
 BALL_PRICE = 1
 TEE_PRICE = 1
-SNACK_PRICE = 2
+SNACK_SMALL_PRICE = 1
+SNACK_LARGE_PRICE = 2
 ORDER_TIME = timedelta(minutes=20)
 MY_TZ = ZoneInfo("America/Chicago")
 
@@ -83,7 +84,8 @@ class Order(db.Model):
     name: Mapped[str] = mapped_column(db.String)
     ball_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     tee_qty: Mapped[int] = mapped_column(db.Integer, default=0)
-    snack_qty: Mapped[int] = mapped_column(db.Integer, default=0)
+    snack_small_qty: Mapped[int] = mapped_column(db.Integer, default=0)
+    snack_large_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     cost: Mapped[int] = mapped_column(db.Integer)
     status: Mapped[str] = mapped_column(db.String, default="pending")
     timestamp: Mapped[datetime] = mapped_column(db.DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
@@ -95,22 +97,29 @@ class ShopStatus(db.Model):
     is_open: Mapped[bool] = mapped_column(db.Boolean, default=True)
 
 
-def run_migrations():
-    """Add columns that were introduced after the tables already existed in a deployed db."""
+def fix_data():
     inspector = inspect(db.engine)
     if 'orders' in inspector.get_table_names():
         columns = {col['name'] for col in inspector.get_columns('orders')}
         if 'status' not in columns:
             with db.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN status VARCHAR DEFAULT 'pending'"))
+        if 'snack_small_qty' not in columns:
+            with db.engine.begin() as conn:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN snack_small_qty INTEGER DEFAULT 0"))
+                if 'snack_qty' in columns:
+                    conn.execute(text("UPDATE orders SET snack_small_qty = snack_qty"))
+        if 'snack_large_qty' not in columns:
+            with db.engine.begin() as conn:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN snack_large_qty INTEGER DEFAULT 0"))
 
 
 with app.app_context():
     db.create_all()
-    run_migrations()
+    fix_data()
 
 
-def get_shop_status():
+def open_or_closed():
     status = db.session.get(ShopStatus, 1)
     if status is None:
         status = ShopStatus(id=1, is_open=True)
@@ -119,7 +128,7 @@ def get_shop_status():
     return status
 
 
-def purge_expired_orders():
+def delelte_old_orders():
     cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - ORDER_TIME
     try:
         db.session.execute(db.delete(Order).where(Order.timestamp < cutoff))
@@ -177,12 +186,12 @@ def logout():
 @app.route('/orders', methods=['GET', 'POST'])
 @login_required
 def orders():
-    purge_expired_orders()
+    delelte_old_orders()
     current_orders = db.session.execute(db.select(Order).order_by(Order.timestamp)).scalars().all()
     return render_template(
         'orders.html',
         current_orders=current_orders,
-        shop_status=get_shop_status(),
+        shop_status=open_or_closed(),
         form=CSRFOnlyForm(),
     )
 
@@ -215,7 +224,7 @@ def update_order_status(order_id):
 def toggle_shop_status():
     form = CSRFOnlyForm()
     if form.validate_on_submit():
-        status = get_shop_status()
+        status = open_or_closed()
         status.is_open = not status.is_open
         try:
             db.session.commit()
@@ -227,7 +236,7 @@ def toggle_shop_status():
 # For ordering golf balls
 @app.route('/order', methods=['GET', 'POST'])
 def order():
-    shop_status = get_shop_status()
+    shop_status = open_or_closed()
     if not shop_status.is_open:
         return render_template('order.html', closed=True)
 
@@ -235,14 +244,21 @@ def order():
     if form.validate_on_submit():
         ball_qty = form.ball_qty.data or 0
         tee_qty = form.tee_qty.data or 0
-        snack_qty = form.snack_qty.data or 0
-        cost = ball_qty * BALL_PRICE + tee_qty * TEE_PRICE + snack_qty * SNACK_PRICE
+        snack_small_qty = form.snack_small_qty.data or 0
+        snack_large_qty = form.snack_large_qty.data or 0
+        cost = (
+            ball_qty * BALL_PRICE
+            + tee_qty * TEE_PRICE
+            + snack_small_qty * SNACK_SMALL_PRICE
+            + snack_large_qty * SNACK_LARGE_PRICE
+        )
         new_order = Order(
             hole_number=form.hole_number.data,
             name=form.name.data,
             ball_qty=ball_qty,
             tee_qty=tee_qty,
-            snack_qty=snack_qty,
+            snack_small_qty=snack_small_qty,
+            snack_large_qty=snack_large_qty,
             cost=cost,
         )
         try:
@@ -260,7 +276,8 @@ def order():
         closed=False,
         price_per_ball=BALL_PRICE,
         price_per_tee=TEE_PRICE,
-        price_per_snack=SNACK_PRICE,
+        price_per_snack_small=SNACK_SMALL_PRICE,
+        price_per_snack_large=SNACK_LARGE_PRICE,
     )
 
 if __name__ == '__main__':
