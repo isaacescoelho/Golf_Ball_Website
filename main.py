@@ -168,7 +168,12 @@ def csrf_error(e):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template(
+        'index.html',
+        price_per_ball=BALL_PRICE,
+        price_per_tee=TEE_PRICE,
+        price_per_lemonade=LEMONADE_PRICE,
+    )
 
 @app.route('/about')
 def about():

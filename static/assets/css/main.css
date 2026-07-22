@@ -4135,3 +4135,8 @@ input, select, textarea {
 		--bs-alert-border-color: #e13652;
 		--bs-alert-link-color: #ffffff;
 	}
+
+	#price-list {
+		list-style: none;
+		padding-left: 0;
+	}
