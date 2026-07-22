@@ -18,8 +18,7 @@ class OrderForm(FlaskForm):
     hole_number = IntegerField("Hole Number", validators=[DataRequired(), NumberRange(min=1, max=18)])
     ball_qty = IntegerField("Golf Balls", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
     tee_qty = IntegerField("Tees", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
-    snack_small_qty = IntegerField("Small Snacks", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
-    snack_large_qty = IntegerField("Large Snacks", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
+    lemonade_qty = IntegerField("Lemonade", validators=[Optional(), NumberRange(min=0, max=50)], default=0)
     submit = SubmitField("Place Order")
 
     def validate(self, extra_validators=None):
@@ -28,8 +27,7 @@ class OrderForm(FlaskForm):
         if not (
             (self.ball_qty.data or 0)
             + (self.tee_qty.data or 0)
-            + (self.snack_small_qty.data or 0)
-            + (self.snack_large_qty.data or 0)
+            + (self.lemonade_qty.data or 0)
         ):
             self.ball_qty.errors.append("Order at least one item.")
             return False

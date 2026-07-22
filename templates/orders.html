@@ -31,8 +31,7 @@
                                <th>Hole</th>
                                <th>Balls</th>
                                <th>Tees</th>
-                               <th>Snacks (S)</th>
-                               <th>Snacks (L)</th>
+                               <th>Lemonade</th>
                                <th>Cost</th>
                                <th>Placed At</th>
                                <th>Status</th>
@@ -45,8 +44,7 @@
                                <td>{{ order.hole_number }}</td>
                                <td>{{ order.ball_qty }}</td>
                                <td>{{ order.tee_qty }}</td>
-                               <td>{{ order.snack_small_qty }}</td>
-                               <td>{{ order.snack_large_qty }}</td>
+                               <td>{{ order.lemonade_qty }}</td>
                                <td>${{ order.cost }}</td>
                                <td>{{ (order.timestamp | central_time).strftime('%I:%M %p') }}</td>
                                <td>{{ order.status | replace("_", " ") | title }}</td>
@@ -65,7 +63,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                               <td colspan="11">No orders yet.</td>
+                               <td colspan="10">No orders yet.</td>
                             </tr>
                             {% endfor %}
                          </table>

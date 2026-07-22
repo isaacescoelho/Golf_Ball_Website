@@ -12,11 +12,13 @@
                    <!-- Content -->
                       <section id="content">
                       {% if closed %}
-                         <p>We're not taking orders right now — check back later!</p>
+                         <p>Sorry, we're not selling right now — online or at
+                         <a href="{{ url_for('index') }}#stand-location">our stand</a>. Come find us
+                         next time we're open!</p>
                       {% else %}
                          <p>Running low mid-round? No need to head back to the clubhouse. Just let
                          us know your name, what hole you're on, and how many golf balls, tees, and
-                         snacks you need, and we'll get them out to you on the course. It's the same
+                         lemonade you need, and we'll get them out to you on the course. It's the same
                          simple idea we started with in our back yard — just made a little easier to
                          reach.</p>
 
@@ -32,8 +34,7 @@
                          <ul id="price-list">
                             <li>Golf Ball — ${{ price_per_ball }} each</li>
                             <li>Tee — ${{ price_per_tee }} each</li>
-                            <li>Small Snack — ${{ price_per_snack_small }} each</li>
-                            <li>Large Snack — ${{ price_per_snack_large }} each</li>
+                            <li>Lemonade — ${{ price_per_lemonade }} each</li>
                          </ul>
 
                          {{ render_form(form) }}

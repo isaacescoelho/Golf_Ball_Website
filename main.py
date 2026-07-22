@@ -30,8 +30,7 @@ Bootstrap5(app)
 
 BALL_PRICE = 1
 TEE_PRICE = 1
-SNACK_SMALL_PRICE = 1
-SNACK_LARGE_PRICE = 2
+LEMONADE_PRICE = 1
 ORDER_TIME = timedelta(minutes=20)
 MY_TZ = ZoneInfo("America/Chicago")
 
@@ -97,8 +96,7 @@ class Order(db.Model):
     name: Mapped[str] = mapped_column(db.String)
     ball_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     tee_qty: Mapped[int] = mapped_column(db.Integer, default=0)
-    snack_small_qty: Mapped[int] = mapped_column(db.Integer, default=0)
-    snack_large_qty: Mapped[int] = mapped_column(db.Integer, default=0)
+    lemonade_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     cost: Mapped[int] = mapped_column(db.Integer)
     status: Mapped[str] = mapped_column(db.String, default="pending")
     timestamp: Mapped[datetime] = mapped_column(db.DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
@@ -118,14 +116,9 @@ def fix_data():
         if 'status' not in columns:
             with db.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN status VARCHAR DEFAULT 'pending'"))
-        if 'snack_small_qty' not in columns:
+        if 'lemonade_qty' not in columns:
             with db.engine.begin() as conn:
-                conn.execute(text("ALTER TABLE orders ADD COLUMN snack_small_qty INTEGER DEFAULT 0"))
-                if 'snack_qty' in columns:
-                    conn.execute(text("UPDATE orders SET snack_small_qty = snack_qty"))
-        if 'snack_large_qty' not in columns:
-            with db.engine.begin() as conn:
-                conn.execute(text("ALTER TABLE orders ADD COLUMN snack_large_qty INTEGER DEFAULT 0"))
+                conn.execute(text("ALTER TABLE orders ADD COLUMN lemonade_qty INTEGER DEFAULT 0"))
 
 
 with app.app_context():
@@ -271,22 +264,19 @@ def order():
     if form.validate_on_submit():
         ball_qty = form.ball_qty.data or 0
         tee_qty = form.tee_qty.data or 0
-        snack_small_qty = form.snack_small_qty.data or 0
-        snack_large_qty = form.snack_large_qty.data or 0
+        lemonade_qty = form.lemonade_qty.data or 0
         # calculates cost to put in Order table
         cost = (
             ball_qty * BALL_PRICE
             + tee_qty * TEE_PRICE
-            + snack_small_qty * SNACK_SMALL_PRICE
-            + snack_large_qty * SNACK_LARGE_PRICE
+            + lemonade_qty * LEMONADE_PRICE
         )
         new_order = Order(
             hole_number=form.hole_number.data,
             name=form.name.data,
             ball_qty=ball_qty,
             tee_qty=tee_qty,
-            snack_small_qty=snack_small_qty,
-            snack_large_qty=snack_large_qty,
+            lemonade_qty=lemonade_qty,
             cost=cost,
         )
         try:
@@ -304,8 +294,7 @@ def order():
         closed=False,
         price_per_ball=BALL_PRICE,
         price_per_tee=TEE_PRICE,
-        price_per_snack_small=SNACK_SMALL_PRICE,
-        price_per_snack_large=SNACK_LARGE_PRICE,
+        price_per_lemonade=LEMONADE_PRICE,
     )
 
 if __name__ == '__main__':
