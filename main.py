@@ -4,6 +4,8 @@ from flask_bootstrap import Bootstrap5
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFError
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Text, inspect, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -27,6 +29,11 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 Bootstrap5(app)
+
+# Rate limiting so one person (or a bot) can't spam-submit the order form.
+# get_remote_address = the visitor's IP, so the limit is "per visitor" not "per site".
+# No app-wide default_limits - only routes with their own @limiter.limit(...) are restricted.
+limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
 BALL_PRICE = 1
 TEE_PRICE = 1
@@ -164,6 +171,12 @@ def csrf_error(e):
     flash("Your form session expired. Please try again.")
     return redirect(request.referrer or url_for('index'))
 
+
+@app.errorhandler(429)
+def rate_limit_error(e):
+    flash("You're placing orders too quickly. Please wait a bit and try again.")
+    return redirect(request.referrer or url_for('index'))
+
 # PAGES
 
 @app.route('/')
@@ -260,6 +273,8 @@ def toggle_shop_status():
 
 # For ordering golf balls
 @app.route('/order', methods=['GET', 'POST'])
+# Limits actual order submissions (not just visiting the page) to 2 per minute per visitor
+@limiter.limit("2 per minute", methods=["POST"])
 def order():
     shop_status = open_or_closed()
     if not shop_status.is_open:
