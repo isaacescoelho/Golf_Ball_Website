@@ -81,8 +81,8 @@
 						<div class="table-wrapper">
 						<table>
 							<tr>
-								<th>Tier</th>
-								<th>Golf Balls</th>
+								<th>Item</th>
+								<th>Details</th>
 								<th>Price</th>
 							</tr>
 							<tr>
@@ -100,12 +100,18 @@
 								<td>Titleist Pro V1, Callaway Chrome Soft, TaylorMade TP5</td>
 								<td>${{ '%.2f' | format(price_per_pro_ball) }} each</td>
 							</tr>
+							<tr>
+								<td>Tee</td>
+								<td>—</td>
+								<td>${{ '%.2f' | format(price_per_tee) }} each</td>
+							</tr>
+							<tr>
+								<td>Lemonade</td>
+								<td>—</td>
+								<td>${{ '%.2f' | format(price_per_lemonade) }} each</td>
+							</tr>
 						</table>
 						</div>
-						<ul id="price-list">
-							<li>Tee — ${{ price_per_tee }} each</li>
-							<li>Lemonade — ${{ price_per_lemonade }} each</li>
-						</ul>
 						<p>We accept cash or Venmo on delivery — no card needed.</p>
 					</div>
 				</section>
