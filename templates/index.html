@@ -17,7 +17,7 @@
 					<div class="container">
 						<header>
 							<h3>Find Our Stand</h3>
-							<p>We're set up at Hole <strong>11</strong></p>
+							<p>We're set up at Hole <strong>15</strong></p>
 						</header>
 					</div>
 				</section>
@@ -78,8 +78,31 @@
 							<h3>Prices</h3>
 							<p>No surprises — here's exactly what you'll pay</p>
 						</header>
+						<div class="table-wrapper">
+						<table>
+							<tr>
+								<th>Tier</th>
+								<th>Golf Balls</th>
+								<th>Price</th>
+							</tr>
+							<tr>
+								<td>Basic</td>
+								<td>Top-Flite Gamer, Pinnacle Soft, Wilson Staff Duo Soft</td>
+								<td>${{ '%.2f' | format(price_per_basic_ball) }} each</td>
+							</tr>
+							<tr>
+								<td>Standard</td>
+								<td>Callaway Warbird, Srixon Soft Feel, Bridgestone e6</td>
+								<td>${{ '%.2f' | format(price_per_standard_ball) }} each</td>
+							</tr>
+							<tr>
+								<td>Pro</td>
+								<td>Titleist Pro V1, Callaway Chrome Soft, TaylorMade TP5</td>
+								<td>${{ '%.2f' | format(price_per_pro_ball) }} each</td>
+							</tr>
+						</table>
+						</div>
 						<ul id="price-list">
-							<li>Golf Ball — ${{ price_per_ball }} each</li>
 							<li>Tee — ${{ price_per_tee }} each</li>
 							<li>Lemonade — ${{ price_per_lemonade }} each</li>
 						</ul>

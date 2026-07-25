@@ -26,26 +26,33 @@
                          <div class="table-wrapper">
                          <table>
                             <tr>
-                               <th>#</th>
-                               <th>Name</th>
-                               <th>Hole</th>
-                               <th>Balls</th>
-                               <th>Tees</th>
-                               <th>Lemonade</th>
-                               <th>Cost</th>
-                               <th>Placed At</th>
-                               <th>Status</th>
-                               <th>Update</th>
+                               <th rowspan="2">#</th>
+                               <th rowspan="2">Name</th>
+                               <th rowspan="2">Hole</th>
+                               <th colspan="3">Golf Balls</th>
+                               <th rowspan="2">Tees</th>
+                               <th rowspan="2">Lemonade</th>
+                               <th rowspan="2">Cost</th>
+                               <th rowspan="2">Placed At</th>
+                               <th rowspan="2">Status</th>
+                               <th rowspan="2">Update</th>
+                            </tr>
+                            <tr>
+                               <th>Basic</th>
+                               <th>Standard</th>
+                               <th>Pro</th>
                             </tr>
                             {% for order in current_orders %}
                             <tr>
                                <td>{{ order.id }}</td>
                                <td>{{ order.name }}</td>
                                <td>{{ order.hole_number }}</td>
-                               <td>{{ order.ball_qty }}</td>
+                               <td>{{ order.basic_ball_qty }}</td>
+                               <td>{{ order.standard_ball_qty }}</td>
+                               <td>{{ order.pro_ball_qty }}</td>
                                <td>{{ order.tee_qty }}</td>
                                <td>{{ order.lemonade_qty }}</td>
-                               <td>${{ order.cost }}</td>
+                               <td>${{ '%.2f' | format(order.cost) }}</td>
                                <td>{{ (order.timestamp | central_time).strftime('%I:%M %p') }}</td>
                                <td>{{ order.status | replace("_", " ") | title }}</td>
                                <td>
@@ -63,7 +70,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                               <td colspan="10">No orders yet.</td>
+                               <td colspan="12">No orders yet.</td>
                             </tr>
                             {% endfor %}
                          </table>
