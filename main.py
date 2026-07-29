@@ -319,6 +319,7 @@ def order():
             db.session.commit()
         except SQLAlchemyError:
             db.session.rollback()
+            app.logger.exception("Failed to place order")
             flash("Something went wrong placing your order. Please try again.")
             return redirect(url_for('order'))
         flash(f"Order placed! Total cost: ${cost:.2f}. We'll bring your order out shortly.")
