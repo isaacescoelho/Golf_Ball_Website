@@ -34,11 +34,9 @@ Bootstrap5(app)
 # No app-wide default_limits - only routes with their own @limiter.limit(...) are restricted.
 limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
-BASIC_BALL_PRICE = 0.75
-STANDARD_BALL_PRICE = 1.00
-PRO_BALL_PRICE = 2.00
-TEE_PRICE = 1
-LEMONADE_PRICE = 1
+BALL_PRICE = 2.00
+TEE_PRICE = 0.50
+LEMONADE_PRICE = 3
 ORDER_TIME = timedelta(minutes=20)
 MY_TZ = ZoneInfo("America/Chicago")
 
@@ -101,9 +99,7 @@ class Order(db.Model):
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     hole_number: Mapped[int] = mapped_column(db.Integer)
     name: Mapped[str] = mapped_column(db.String)
-    basic_ball_qty: Mapped[int] = mapped_column(db.Integer, default=0)
-    standard_ball_qty: Mapped[int] = mapped_column(db.Integer, default=0)
-    pro_ball_qty: Mapped[int] = mapped_column(db.Integer, default=0)
+    ball_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     tee_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     lemonade_qty: Mapped[int] = mapped_column(db.Integer, default=0)
     cost: Mapped[float] = mapped_column(db.Float)
@@ -128,11 +124,10 @@ def fix_data():
         if 'lemonade_qty' not in columns:
             with db.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN lemonade_qty INTEGER DEFAULT 0"))
-        # basic/standard/pro replaced the old single ball_qty column, which is left in place unused
-        for tier_column in ("basic_ball_qty", "standard_ball_qty", "pro_ball_qty"):
-            if tier_column not in columns:
-                with db.engine.begin() as conn:
-                    conn.execute(text(f"ALTER TABLE orders ADD COLUMN {tier_column} INTEGER DEFAULT 0"))
+        # ball_qty replaces the old basic/standard/pro tier columns, which are left in place unused
+        if 'ball_qty' not in columns:
+            with db.engine.begin() as conn:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN ball_qty INTEGER DEFAULT 0"))
         # cost used to always be a whole dollar amount (INTEGER); tiered ball prices can be cents, so it needs to hold decimals
         cost_column = columns.get('cost')
         if cost_column is not None and db.engine.dialect.name == 'postgresql':
@@ -197,9 +192,7 @@ def rate_limit_error(e):
 def index():
     return render_template(
         'index.html',
-        price_per_basic_ball=BASIC_BALL_PRICE,
-        price_per_standard_ball=STANDARD_BALL_PRICE,
-        price_per_pro_ball=PRO_BALL_PRICE,
+        price_per_ball=BALL_PRICE,
         price_per_tee=TEE_PRICE,
         price_per_lemonade=LEMONADE_PRICE,
     )
@@ -298,25 +291,19 @@ def order():
 
     form = OrderForm()
     if form.validate_on_submit():
-        basic_ball_qty = form.basic_ball_qty.data or 0
-        standard_ball_qty = form.standard_ball_qty.data or 0
-        pro_ball_qty = form.pro_ball_qty.data or 0
+        ball_qty = form.ball_qty.data or 0
         tee_qty = form.tee_qty.data or 0
         lemonade_qty = form.lemonade_qty.data or 0
         # calculates cost to put in Order table
         cost = (
-            basic_ball_qty * BASIC_BALL_PRICE
-            + standard_ball_qty * STANDARD_BALL_PRICE
-            + pro_ball_qty * PRO_BALL_PRICE
+            ball_qty * BALL_PRICE
             + tee_qty * TEE_PRICE
             + lemonade_qty * LEMONADE_PRICE
         )
         new_order = Order(
             hole_number=form.hole_number.data,
             name=form.name.data,
-            basic_ball_qty=basic_ball_qty,
-            standard_ball_qty=standard_ball_qty,
-            pro_ball_qty=pro_ball_qty,
+            ball_qty=ball_qty,
             tee_qty=tee_qty,
             lemonade_qty=lemonade_qty,
             cost=cost,
@@ -334,9 +321,7 @@ def order():
         'order.html',
         form=form,
         closed=False,
-        price_per_basic_ball=BASIC_BALL_PRICE,
-        price_per_standard_ball=STANDARD_BALL_PRICE,
-        price_per_pro_ball=PRO_BALL_PRICE,
+        price_per_ball=BALL_PRICE,
         price_per_tee=TEE_PRICE,
         price_per_lemonade=LEMONADE_PRICE,
     )
