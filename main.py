@@ -128,9 +128,12 @@ def fix_data():
         if 'ball_qty' not in columns:
             with db.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN ball_qty INTEGER DEFAULT 0"))
-        # the old tier columns are NOT NULL with no default, so leaving them in place makes every
-        # insert fail (SQLAlchemy doesn't set them since the model no longer has them) - drop them
-        for legacy_column in ("basic_ball_qty", "standard_ball_qty", "pro_ball_qty"):
+        # old columns from features that no longer exist are NOT NULL with no default, so leaving
+        # them in place makes every insert fail (nothing in the model sets them anymore) - drop them
+        for legacy_column in (
+            "basic_ball_qty", "standard_ball_qty", "pro_ball_qty",
+            "snack_qty", "snack_small_qty", "snack_large_qty",
+        ):
             if legacy_column in columns:
                 with db.engine.begin() as conn:
                     conn.execute(text(f"ALTER TABLE orders DROP COLUMN {legacy_column}"))
