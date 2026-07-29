@@ -1,4 +1,4 @@
-{% from 'bootstrap5/form.html' import render_form %}
+{% from 'bootstrap5/form.html' import render_field %}
 {% include "header.html" %}
 
           <!-- Main -->
@@ -56,7 +56,13 @@
                          </table>
                          </div>
 
-                         {{ render_form(form) }}
+                         <form method="post" role="form">
+                            {{ form.hidden_tag() }}
+                            {% for field in form if field.name not in ('submit', 'csrf_token') %}
+                               {{ render_field(field) }}
+                            {% endfor %}
+                            <button type="submit" class="button small alt">Place Order</button>
+                         </form>
                       {% endif %}
                       </section>
 
