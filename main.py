@@ -124,10 +124,16 @@ def fix_data():
         if 'lemonade_qty' not in columns:
             with db.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN lemonade_qty INTEGER DEFAULT 0"))
-        # ball_qty replaces the old basic/standard/pro tier columns, which are left in place unused
+        # ball_qty replaces the old basic/standard/pro tier columns
         if 'ball_qty' not in columns:
             with db.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN ball_qty INTEGER DEFAULT 0"))
+        # the old tier columns are NOT NULL with no default, so leaving them in place makes every
+        # insert fail (SQLAlchemy doesn't set them since the model no longer has them) - drop them
+        for legacy_column in ("basic_ball_qty", "standard_ball_qty", "pro_ball_qty"):
+            if legacy_column in columns:
+                with db.engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE orders DROP COLUMN {legacy_column}"))
         # cost used to always be a whole dollar amount (INTEGER); tiered ball prices can be cents, so it needs to hold decimals
         cost_column = columns.get('cost')
         if cost_column is not None and db.engine.dialect.name == 'postgresql':
